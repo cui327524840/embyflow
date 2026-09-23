@@ -6,6 +6,7 @@ struct SettingsView: View {
 
     @State private var cacheSizeText = "计算中…"
     @State private var showLogoutConfirm = false
+    @State private var showAddAccount = false
 
     private let bitrateOptions: [(title: String, value: Int)] = [
         ("自动（不限制）", 0),
@@ -41,6 +42,10 @@ struct SettingsView: View {
             .onAppear(perform: refreshCacheSize)
         }
         .navigationViewStyle(StackNavigationViewStyle())
+        .sheet(isPresented: $showAddAccount) {
+            LoginView(isAddingAccount: true, onFinish: { showAddAccount = false })
+                .environmentObject(session)
+        }
         .alert(isPresented: $showLogoutConfirm) {
             Alert(
                 title: Text("退出登录"),
