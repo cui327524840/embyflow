@@ -69,6 +69,7 @@ struct HomeView: View {
 
     @State private var navigationItem: ItemDto?
     @State private var isNavigating = false
+    @State private var showAddAccount = false
 
     var body: some View {
         NavigationView {
@@ -83,6 +84,9 @@ struct HomeView: View {
             }
             .navigationBarTitle("首页", displayMode: .large)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    accountMenu
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: refresh) {
                         Image(systemName: "arrow.clockwise")
@@ -90,8 +94,42 @@ struct HomeView: View {
                 }
             }
             .background(programmaticLink)
+            .sheet(isPresented: $showAddAccount) {
+                LoginView(isAddingAccount: true, onFinish: { showAddAccount = false })
+                    .environmentObject(session)
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
+    }
+
+    /// 左上角账号切换：多服务器 / 多用户一键切。
+    private var accountMenu: some View {
+        Menu {
+            Section(header: Text("切换账号")) {
+                ForEach(session.accounts) { account in
+                    Button(action: { session.switchTo(id: account.id) }) {
+                        if account.id == session.activeAccountID {
+                            Label(account.displayName, systemImage: "checkmark.circle.fill")
+                        } else {
+                            Text(account.displayName)
+                        }
+                    }
+                }
+            }
+            Button(action: { showAddAccount = true }) {
+                Label("添加账号", systemImage: "plus.circle")
+            }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: "person.crop.circle")
+                    .font(.system(size: 15))
+                Text(session.activeAccount?.server.name ?? "账号")
+                    .font(.system(size: 13, weight: .medium))
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8, weight: .bold))
+            }
+        }
     }
 
     @ViewBuilder

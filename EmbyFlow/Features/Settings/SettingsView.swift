@@ -30,6 +30,7 @@ struct SettingsView: View {
             List {
                 playbackModeSection
                 playbackSection
+                accountsSection
                 serverSection
                 cacheSection
                 aboutSection
@@ -47,6 +48,45 @@ struct SettingsView: View {
                 primaryButton: .destructive(Text("退出")) { session.logout() },
                 secondaryButton: .cancel(Text("取消"))
             )
+        }
+    }
+
+    private var accountsSection: some View {
+        Section(
+            header: Text("账号"),
+            footer: Text("可以保存多个服务器 / 用户，点一下即可切换；左滑删除。")
+        ) {
+            ForEach(session.accounts) { account in
+                Button(action: { session.switchTo(id: account.id) }) {
+                    HStack(spacing: 10) {
+                        Image(systemName: account.id == session.activeAccountID ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 15))
+                            .foregroundColor(account.id == session.activeAccountID ? Theme.accent : Theme.tertiaryText)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(account.userName)
+                                .foregroundColor(.white)
+                            Text(account.server.baseURLString)
+                                .font(.system(size: 11))
+                                .foregroundColor(Theme.secondaryText)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            .onDelete(perform: deleteAccounts)
+
+            Button(action: { showAddAccount = true }) {
+                Label("添加账号", systemImage: "plus.circle")
+            }
+        }
+    }
+
+    private func deleteAccounts(_ offsets: IndexSet) {
+        for index in offsets where session.accounts.indices.contains(index) {
+            session.remove(id: session.accounts[index].id)
         }
     }
 
@@ -130,7 +170,7 @@ struct SettingsView: View {
 
     private var serverSection: some View {
         Section(header: Text("服务器")) {
-            if let credentials = session.credentials {
+            if let credentials = session.activeAccount {
                 infoRow(icon: "server.rack", title: "名称", value: credentials.server.name)
                 infoRow(icon: "link", title: "地址", value: credentials.server.baseURLString)
                 infoRow(icon: "person", title: "用户", value: credentials.userName)

@@ -4,6 +4,10 @@ import UIKit
 struct LoginView: View {
     @EnvironmentObject private var session: SessionStore
 
+    /// true 时作为「添加账号」表单弹出（带取消按钮，成功后自动关闭）。
+    var isAddingAccount = false
+    var onFinish: (() -> Void)?
+
     @State private var address = ""
     @State private var username = ""
     @State private var password = ""
@@ -14,6 +18,20 @@ struct LoginView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
+                    if isAddingAccount {
+                        HStack {
+                            Button(action: { onFinish?() }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "chevron.left")
+                                    Text("返回")
+                                }
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(Theme.accent)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                    }
+
                     header
                     form
 
@@ -56,7 +74,7 @@ struct LoginView: View {
             Text("EmbyFlow")
                 .font(.system(size: 27, weight: .bold))
                 .foregroundColor(.white)
-            Text("连接你的 Emby 服务器")
+            Text(isAddingAccount ? "添加一个 Emby 账号" : "连接你的 Emby 服务器")
                 .font(.system(size: 13))
                 .foregroundColor(Theme.secondaryText)
         }
@@ -84,7 +102,7 @@ struct LoginView: View {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .black))
                 }
-                Text(session.isConnecting ? "正在连接…" : "连接")
+                Text(session.isConnecting ? "正在连接…" : (isAddingAccount ? "添加账号" : "连接"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.black)
             }
@@ -136,7 +154,8 @@ struct LoginView: View {
         let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
         Task {
-            await session.login(address: trimmedAddress, username: trimmedUsername, password: password)
+            let success = await session.login(address: trimmedAddress, username: trimmedUsername, password: password)
+            if success { onFinish?() }
         }
     }
 }

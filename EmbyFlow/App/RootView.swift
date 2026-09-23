@@ -6,7 +6,9 @@ struct RootView: View {
     var body: some View {
         Group {
             if session.isAuthenticated {
+                // 切换账号时整棵树重建，避免残留上一个账号的列表与缓存。
                 MainTabView()
+                    .id(session.activeAccountID ?? "guest")
             } else {
                 LoginView()
             }
