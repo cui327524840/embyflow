@@ -33,6 +33,8 @@ struct PlayerView: View {
 
     private func beginIfNeeded() {
         UIApplication.shared.isIdleTimerDisabled = true
+        // 进播放器自动横屏
+        OrientationController.enterLandscape()
         guard controller == nil, let client = session.client, !request.items.isEmpty else { return }
         let created = PlaybackController(
             client: client,
@@ -46,6 +48,8 @@ struct PlayerView: View {
 
     private func endPlayback() {
         UIApplication.shared.isIdleTimerDisabled = false
+        // 退出播放器转回竖屏
+        OrientationController.exitToPortrait()
         guard let controller = controller else { return }
         Task { await controller.stop() }
     }
