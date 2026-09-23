@@ -1,0 +1,10 @@
+* text=auto
+
+# Scripts and sources are consumed on macOS/Linux toolchains
+*.sh        text eol=lf
+*.swift     text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.md        text eol=lf
+*.json      text eol=lf
+*.pbxproj   text eol=lf

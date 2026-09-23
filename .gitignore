@@ -1,0 +1,18 @@
+# Xcode
+build/
+DerivedData/
+xcuserdata/
+*.xcworkspace
+*.xcuserstate
+*.moved-aside
+
+# XcodeGen output: the project is generated from project.yml
+*.xcodeproj
+EmbyFlow/Info.plist
+
+# Build products
+*.ipa
+Payload/
+
+# macOS
+.DS_Store

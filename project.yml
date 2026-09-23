@@ -1,0 +1,82 @@
+name: EmbyFlow
+
+options:
+  bundleIdPrefix: com.embyflow
+  deploymentTarget:
+    iOS: "14.5"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+  xcodeVersion: "15.0"
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    ALWAYS_SEARCH_USER_PATHS: NO
+    CLANG_ENABLE_MODULES: YES
+    SWIFT_OPTIMIZATION_LEVEL: "-O"
+
+targets:
+  EmbyFlow:
+    type: application
+    platform: iOS
+    deploymentTarget: "14.5"
+    sources:
+      - path: EmbyFlow
+        excludes:
+          - "Info.plist"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.embyflow.app
+        PRODUCT_NAME: EmbyFlow
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SUPPORTS_MACCATALYST: NO
+        ENABLE_PREVIEWS: YES
+    info:
+      path: EmbyFlow/Info.plist
+      properties:
+        CFBundleDisplayName: EmbyFlow
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        UILaunchScreen: {}
+        CADisableMinimumFrameDurationOnPhone: true
+        UIApplicationSupportsIndirectInputEvents: true
+        UIBackgroundModes:
+          - audio
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+          NSAllowsLocalNetworking: true
+        NSLocalNetworkUsageDescription: EmbyFlow 需要访问局域网中的 Emby 服务器，以便播放你家里的媒体库。
+        NSBonjourServices:
+          - _emby._tcp
+        ITSAppUsesNonExemptEncryption: false
+
+# A shared scheme so `xcodebuild -scheme EmbyFlow` works on a clean CI machine
+# (Xcode only auto-creates schemes when the project is opened in the IDE).
+schemes:
+  EmbyFlow:
+    build:
+      targets:
+        EmbyFlow: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+    analyze:
+      config: Debug
