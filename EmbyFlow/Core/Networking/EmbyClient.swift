@@ -35,9 +35,17 @@ final class EmbyClient {
         return created
     }
 
+    /// 必须是纯 ASCII：Emby 会把设备名写进它自己的数据库，
+    /// 非 ASCII（例如「幽灵的 iPhone」）在部分服务器上会直接抛 SQLite 异常，
+    /// 表现就是"同一个账号别的客户端能登、我们报服务器异常"。
     static var deviceDescription: String {
-        let name = UIDevice.current.name
-        return name.isEmpty ? "iOS Device" : name
+        let raw = UIDevice.current.name
+        let ascii = String(raw.unicodeScalars.filter { $0.isASCII }.map(Character.init))
+            .replacingOccurrences(of: "\"", with: "")
+            .replacingOccurrences(of: "\\", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if ascii.isEmpty { return "iPhone" }
+        return String(ascii.prefix(40))
     }
 
     /// The fields we always ask Emby for. Requesting thumbnails of the parent

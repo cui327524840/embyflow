@@ -87,7 +87,24 @@ final class HTTPClient: @unchecked Sendable {
         )
     }
 
+    /// 服务器 5xx（例如它自己的 SQLite 异常）经常是瞬时的，重试两次再判失败。
     func data(for request: URLRequest, session: URLSession) async throws -> (Data, HTTPURLResponse) {
+        var attempt = 0
+        while true {
+            do {
+                return try await singleRequest(request, session: session)
+            } catch let error as APIError {
+                if case .http(let status, _) = error, (500...599).contains(status), attempt < 2 {
+                    attempt += 1
+                    try? await Task.sleep(nanoseconds: UInt64(attempt) * 1_500_000_000)
+                    continue
+                }
+                throw error
+            }
+        }
+    }
+
+    private func singleRequest(_ request: URLRequest, session: URLSession) async throws -> (Data, HTTPURLResponse) {
         do {
             let (data, response) = try await session.embyData(for: request)
             guard let http = response as? HTTPURLResponse else {

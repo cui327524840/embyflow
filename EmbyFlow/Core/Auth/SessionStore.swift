@@ -93,16 +93,19 @@ final class SessionStore: ObservableObject {
         defer { isConnecting = false }
 
         do {
-            // 探活失败不代表不能登录（有些服务器隐藏了公开接口）。
-            let server: EmbyServer
-            do {
-                server = try await EmbyClient.probe(baseURLString: normalized)
-            } catch {
-                let host = URL(string: normalized)?.host ?? normalized
-                server = EmbyServer(name: host, baseURLString: normalized, version: nil)
+            // 不再「先探测再登录」：公开分享服上，登录前打未认证的
+            // /System/Info/Public 可能先写库失败，连累登录接口一起报 SQLite 异常。
+            // 直接登录，成功后再补服务器名与版本。
+            let host = URL(string: normalized)?.host ?? normalized
+            var credentials = try await EmbyClient.authenticate(
+                server: EmbyServer(name: host, baseURLString: normalized, version: nil),
+                username: username,
+                password: password
+            )
+            if let info = try? await EmbyClient.probe(baseURLString: normalized) {
+                credentials.server.name = info.name
+                credentials.server.version = info.version
             }
-
-            let credentials = try await EmbyClient.authenticate(server: server, username: username, password: password)
             upsert(credentials)
             if let stored = accounts.first(where: { $0.id == credentials.id }) {
                 activate(stored)
