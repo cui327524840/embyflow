@@ -332,7 +332,7 @@ final class EmbyClient {
             startTimeTicks: max(0, startTimeTicks),
             audioStreamIndex: audioStreamIndex,
             subtitleStreamIndex: subtitleStreamIndex,
-            maxStreamingBitrate: preferences.effectiveBitrate,
+            maxStreamingBitrate: preferences.resolvedBitrate,
             mediaSourceId: mediaSourceId,
             enableDirectPlay: allowFileHandover,
             enableDirectStream: true,

@@ -14,6 +14,29 @@ struct PlaybackPreferences {
         let caps = [mode.bitrateCap, maxStreamingBitrate].compactMap { $0 }
         return caps.isEmpty ? nil : caps.min()
     }
+
+    /// 设备能吃的分辨率上限：A9（6s）默认就压到 1080p。
+    ///
+    /// 4K 原画在 6s 上根本放不动（A9 没有 4K 硬解余量，HEVC 更是软解），
+    /// 所以「原画播放不了」的正解是让服务器直接给我们 1080p，而不是换播放内核。
+    var resolvedMaxHeight: Int? {
+        if let explicit = mode.maxHeight { return explicit }
+        switch capabilities.decodeClass {
+        case .h264Only: return 1080
+        case .hevc8Bit: return 1440
+        case .hevc10Bit: return nil
+        }
+    }
+
+    /// 老设备同时限制码率，避免 1080p 高码率也顶不住。
+    var resolvedBitrate: Int? {
+        let caps = [
+            mode.bitrateCap,
+            maxStreamingBitrate,
+            capabilities.decodeClass == .h264Only ? 20_000_000 : nil
+        ].compactMap { $0 }
+        return caps.isEmpty ? nil : caps.min()
+    }
 }
 
 /// The capability handshake Emby needs before it decides between
@@ -106,7 +129,7 @@ struct DeviceProfile: Encodable {
 
         return DeviceProfile(
             name: "EmbyFlow",
-            maxStreamingBitrate: preferences.effectiveBitrate,
+            maxStreamingBitrate: preferences.resolvedBitrate,
             directPlayProfiles: directPlayProfiles,
             transcodingProfiles: transcodingProfiles,
             subtitleProfiles: defaultSubtitleProfiles(),
@@ -163,7 +186,7 @@ struct DeviceProfile: Encodable {
 
         // 3. Power-saving modes cap the resolution so 4K sources are downscaled
         //    (a 6s screen is 750p; decoding 4K is pure waste).
-        if let maxHeight = preferences.maxHeight {
+        if let maxHeight = preferences.resolvedMaxHeight {
             profiles.append(
                 CodecProfile(
                     type: "Video",
