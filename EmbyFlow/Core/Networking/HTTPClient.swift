@@ -67,7 +67,12 @@ final class HTTPClient: @unchecked Sendable {
         apiConfig.waitsForConnectivity = true
         apiConfig.requestCachePolicy = .reloadIgnoringLocalCacheData
         apiConfig.urlCache = nil
-        api = URLSession(configuration: apiConfig)
+        // 用带委托的会话：自签名 / 证书链不完整的自建服务器也能登录（与其他播放器一致）。
+        api = URLSession(
+            configuration: apiConfig,
+            delegate: TLSTrustDelegate.shared,
+            delegateQueue: nil
+        )
 
         let imageConfig = URLSessionConfiguration.default
         imageConfig.timeoutIntervalForRequest = 20
@@ -75,7 +80,11 @@ final class HTTPClient: @unchecked Sendable {
         imageConfig.httpMaximumConnectionsPerHost = 8
         imageConfig.requestCachePolicy = .returnCacheDataElseLoad
         imageConfig.urlCache = nil
-        images = URLSession(configuration: imageConfig)
+        images = URLSession(
+            configuration: imageConfig,
+            delegate: TLSTrustDelegate.shared,
+            delegateQueue: nil
+        )
     }
 
     func data(for request: URLRequest, session: URLSession) async throws -> (Data, HTTPURLResponse) {
