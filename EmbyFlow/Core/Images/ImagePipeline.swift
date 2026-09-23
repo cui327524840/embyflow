@@ -69,17 +69,9 @@ final class ImagePipeline: @unchecked Sendable {
         let key = memoryKey(url: url, target: target, scale: scale)
         if let hit = memory.object(forKey: key as NSString) { return hit }
 
-        let task: Task<SendableImage?, Never>
-        lock.lock()
-        if let existing = inFlight[key] {
-            task = existing
-        } else {
-            let created = makeTask(url: url, target: target, scale: scale, memoryKey: key)
-            inFlight[key] = created
-            task = created
+        let task = taskIfNeeded(for: key) {
+            makeTask(url: url, target: target, scale: scale, memoryKey: key)
         }
-        lock.unlock()
-
         return await task.value?.image
     }
 
@@ -148,6 +140,22 @@ final class ImagePipeline: @unchecked Sendable {
         lock.lock()
         inFlight[memoryKey] = nil
         lock.unlock()
+    }
+
+    /// Locking lives in synchronous helpers so no lock is ever taken from an
+    /// async context (that is a warning today and an error in Swift 6).
+    /// Atomic "get existing or create": keeps concurrent requests for the same
+    /// poster down to a single download without locking in an async context.
+    private func taskIfNeeded(
+        for key: String,
+        create: () -> Task<SendableImage?, Never>
+    ) -> Task<SendableImage?, Never> {
+        lock.lock()
+        defer { lock.unlock() }
+        if let existing = inFlight[key] { return existing }
+        let created = create()
+        inFlight[key] = created
+        return created
     }
 
     private func memoryKey(url: URL, target: CGSize, scale: CGFloat) -> String {

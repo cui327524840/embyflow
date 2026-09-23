@@ -22,8 +22,7 @@ final class SessionStore: ObservableObject {
 
     var isAuthenticated: Bool { client != nil }
 
-    /// `nonisolated` so it can be created from a `@StateObject` initialiser.
-    nonisolated init() {
+    init() {
         recentServers = loadStoredServers()
     }
 

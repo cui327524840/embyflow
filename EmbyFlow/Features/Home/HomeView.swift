@@ -15,7 +15,7 @@ final class HomeViewModel: ObservableObject {
 
     private var hasLoaded = false
 
-    nonisolated init() {}
+    init() {}
 
     func loadIfNeeded(client: EmbyClient) async {
         guard !hasLoaded else { return }

@@ -21,8 +21,7 @@ final class AppSettings: ObservableObject {
 
     private let defaults: UserDefaults
 
-    /// `nonisolated` so it can be created from a `@StateObject` initialiser.
-    nonisolated init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.maxStreamingBitrate = defaults.integer(forKey: Keys.maxStreamingBitrate)
         self.subtitleLanguage = defaults.object(forKey: Keys.subtitleLanguage) as? String ?? "zh"

@@ -380,8 +380,9 @@ final class PlaybackController: ObservableObject {
 
     func attach(playerLayer: AVPlayerLayer) {
         Task { @MainActor in
-            guard self.pipController == nil, AVPictureInPictureController.isPictureInPictureSupported() else { return }
-            let controller = AVPictureInPictureController(playerLayer: playerLayer)
+            guard self.pipController == nil,
+                  AVPictureInPictureController.isPictureInPictureSupported(),
+                  let controller = AVPictureInPictureController(playerLayer: playerLayer) else { return }
             controller.canStartPictureInPictureAutomaticallyFromInline = true
             self.pipController = controller
             self.isPiPSupported = true
@@ -410,7 +411,8 @@ final class PlaybackController: ObservableObject {
 
         let interval = CMTime(seconds: 0.25, preferredTimescale: 600)
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            Task { @MainActor in self?.handleTimeUpdate(time) }
+            guard let self = self else { return }
+            Task { @MainActor in self.handleTimeUpdate(time) }
         }
 
         endObserver = NotificationCenter.default.addObserver(
@@ -418,7 +420,8 @@ final class PlaybackController: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.handlePlaybackEnded() }
+            guard let self = self else { return }
+            Task { @MainActor in self.handlePlaybackEnded() }
         }
 
         failureObserver = NotificationCenter.default.addObserver(
@@ -426,9 +429,10 @@ final class PlaybackController: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
+            guard let self = self else { return }
             Task { @MainActor in
-                self?.errorMessage = "播放中断，请重试或切换画质。"
-                self?.isBuffering = false
+                self.errorMessage = "播放中断，请重试或切换画质。"
+                self.isBuffering = false
             }
         }
     }

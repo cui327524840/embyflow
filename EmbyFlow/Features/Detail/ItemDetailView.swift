@@ -12,7 +12,7 @@ final class ItemDetailViewModel: ObservableObject {
 
     private var hasLoaded = false
 
-    nonisolated init(item: ItemDto) {
+    init(item: ItemDto) {
         self.item = item
     }
 

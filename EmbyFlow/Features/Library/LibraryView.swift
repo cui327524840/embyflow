@@ -57,7 +57,7 @@ final class LibraryViewModel: ObservableObject {
     private var startIndex = 0
     private var hasLoaded = false
 
-    nonisolated init(item: ItemDto) {
+    init(item: ItemDto) {
         self.item = item
     }
 
