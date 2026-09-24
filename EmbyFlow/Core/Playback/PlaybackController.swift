@@ -45,6 +45,7 @@ final class PlaybackController: ObservableObject {
     private var subtitleTask: Task<Void, Never>?
     private var controlsTask: Task<Void, Never>?
     private var pipController: AVPictureInPictureController?
+    private var trustedLoader: TrustedResourceLoader?
 
     private var playSessionId: String?
     private var lastReportedTime: Double = -100
@@ -151,7 +152,16 @@ final class PlaybackController: ObservableObject {
             let plan = try PlaybackPlan.make(item: item, source: source, credentials: client.credentials)
             playbackMethod = plan.method
 
-            let asset = AVURLAsset(url: plan.url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: false])
+            // 自签/证书链不完整的服务器：AVFoundation 直连会卡死，
+            // 换成自定义 scheme，把播放请求接管到我们已信任的 URLSession 上。
+            trustedLoader?.cancelAll()
+            let loader = TrustedResourceLoader()
+            let asset = AVURLAsset(
+                url: TrustedResourceLoader.trustedURL(from: plan.url),
+                options: [AVURLAssetPreferPreciseDurationAndTimingKey: false]
+            )
+            asset.resourceLoader.setDelegate(loader, queue: DispatchQueue(label: "embyflow.resource-loader"))
+            trustedLoader = loader
             let playerItem = AVPlayerItem(asset: asset)
             player.replaceCurrentItem(with: playerItem)
             if autoPlay {
